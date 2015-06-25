@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+<title>Control</title>
+<meta charset="UTF-8">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+<style>
+button, iframe, input {
+  box-sizing: border-box;
+}
+#serverFrame {
+  width: 100%;
+  height: 90px;
+}
+#bigFrame {
+  width: 100%;
+  height: 600px;
+}
+button {
+  margin: 5px;
+  margin-left: 0;
+  width: 120px;
+  border-radius: 10px;
+}
+#clearDb, #clearLog {
+  float: right;
+  margin: 5px;
+  margin-right: 0;
+  margin-left: 10px;
+  background-color: red;
+  color: yellow;
+}
+#cmdDo {
+  margin: 5px;
+  margin-left: 10px;
+  margin-right: 0;
+}
+#cmd, #msg {
+  margin-top: 6px;
+  margin-right: 5px;
+  width: 100%;
+}
+</style>
+</head>
+<body>
+<div style="position:relative">
+  <div>
+    <button id="start">Start server</button><br>
+    <button id="stop">Stop server</button><br>
+    <button id="check">Check server</button>
+  </div>
+  <div style="position:absolute;left:130px;top:3px;right:0">
+    <iframe id="serverFrame"></iframe>
+  </div>
+</div>
+<div style="position:relative;height:66px">
+  <div style="position:absolute;top:0;right:0;width:130px">
+    <button id="cmdDo">Send</button>
+  </div>
+  <div style="position:absolute;left:0;top:0;right:130px">
+    <input id="cmd" type="text">
+    <input id="msg" type="text" readonly>
+    </div>
+  </div>
+</div>
+<button id="loadDb">Show database</button>
+<button id="loadLog">Show log</button>
+<button id="saveLog">Save log</button>
+<button id="clearLog">Clear log</button>
+<button id="clearDb">Clear database</button>
+<iframe id="bigFrame"></iframe><br>
+<script>
+(function () {
+  var cmdElem = document.getElementById("cmd");
+  var msgElem = document.getElementById("msg");
+  function server_action(action, newsrc) {
+    try {
+      var socket = new WebSocket("ws://5.9.145.115:1234/");
+      socket.onopen = function(msg) {
+            var cmd = action.trim();
+            if (cmd.charAt(0) != '{') {
+              cmd = '{"action":"'+cmd+'"}';
+            };
+            cmdElem.value = cmd;
+            this.send(cmd);
+          };
+      socket.onmessage = function(msg) {
+            msgElem.value = msg.data;
+            if (msg.data == '{"action":"terminate"}') {
+              serverFrameElem.src
+                    = "data:text/plain;charset=US-ASCII,Server terminated";
+            } else {
+              serverFrameElem.src
+                    = "data:text/plain;charset=US-ASCII,Server running";
+            };
+            this.close();
+            socket = null;
+            if (newsrc) {
+              bigFrameElem.src = newsrc+"?s="+tid++;
+            };
+          };
+      socket.onclose = function(msg) {
+            socket = null;
+          };
+    } catch (e) {
+      serverFrameElem.src = "data:text/plain;charset=US-ASCII,"+e.message();
+    };
+  }
+  var tid = 0;
+  var serverFrameElem = document.getElementById("serverFrame");
+  serverFrameElem.src="data:text/plain;charset=US-ASCII,Ready";
+  document.getElementById("start").onclick = function () {
+    serverFrameElem.src="data:text/plain;charset=US-ASCII,Server running";
+    setTimeout(function () {
+          serverFrameElem.src="Server";
+        }, 1000);
+  };
+  document.getElementById("stop").onclick = function () {
+    server_action("terminate");
+  };
+  document.getElementById("check").onclick = function () {
+   serverFrameElem.src
+          = "data:text/plain;charset=US-ASCII,Checking server";
+    server_action("version");
+  };
+  var bigFrameElem = document.getElementById("bigFrame");
+  document.getElementById("loadDb").onclick = function () {
+    bigFrameElem.src = "Show?s="+tid++;
+  };
+  document.getElementById("loadLog").onclick = function () {
+    bigFrameElem.src = "Server_log.txt?s="+tid++;
+  };
+  document.getElementById("saveLog").onclick = function () {
+    bigFrameElem.src = "Save_log?s="+tid++;
+  };
+  document.getElementById("clearDb").onclick = function() {
+    server_action("clear", "Show");
+  };
+  document.getElementById("clearLog").onclick = function() {
+    server_action("clear_log", "Server_log.txt");
+  };
+  document.getElementById("cmdDo").onclick = function() {
+    if (bigFrameElem.src.substr(0, 14) == "Server_log.txt") {
+      server_action(cmdElem.value, "Server_log.txt");
+    } else {
+      server_action(cmdElem.value);
+    };
+  };
+})();
+</script>
+</body>
+</html>

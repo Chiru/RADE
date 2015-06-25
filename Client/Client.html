@@ -1,0 +1,1022 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var dbServerURI = "ws://5.9.145.115:1234/";
+
+</script>
+<meta charset="UTF-8">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Client</title>
+<style>
+* {
+  font-size: 36pt;
+  line-height: 45pt;
+  box-sizing: border-box;
+}
+body {
+  -webkit-column-width: 500pt; /* Chrome, Safari, Opera */
+  -moz-column-width: 500pt; /* Firefox */
+  column-width: 500pt;
+}
+div {
+  -moz-column-break-inside: avoid;
+  -moz-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  -webkit-break-inside: avoid;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.wide {
+  -webkit-column-span: all; /* Chrome, Safari, Opera */
+  column-span: all;
+}
+h1, p {
+  margin-top: 0;
+  margin-bottom: 45pt;
+}
+table {
+  border-collapse: collapse;
+}
+td {
+  padding: 0;
+}
+body {
+  background-color: #eeeeee;
+  width: 95%;
+}
+input, button {
+  background-color: White;
+  line-height: 43pt;
+  margin-left: 12pt;
+  margin-right: 12pt;
+}
+input[type="checkbox"] {
+  height: 30pt;
+  width: 30pt;
+}
+input[type="radio"] {
+  height: 20pt;
+  width: 20pt;
+}
+button {
+  width: 90pt;
+  height: 42pt;
+  border-radius: 45pt;
+  background-color: White;
+}
+td button {
+  position: relative;
+  top: -9px;
+}
+span {
+  font-weight: normal;
+  display: inline-block;
+  width: 108pt;
+}
+h1 span {
+  display: initial;
+}
+a {
+  width: 90pt;
+  height: 42pt;
+  border: 2px solid black;
+  border-radius: 45pt;
+  background-color: white;
+  line-height: 43pt;
+  margin-left: 12pt;
+  margin-right: 12pt;
+  padding-left: 55px;
+  padding-right: 50px;
+  font-wight: normal;
+  text-decoration: initial;
+  color: black;
+  border-left-color: white;
+  border-top-color: white;
+  border-right-color: grey;
+  border-bottom-color: gray;
+}
+a:active {
+  border-left-color: grey;
+  border-top-color: grey;
+  border-right-color: white;
+  border-bottom-color: white;
+}
+</style>
+<script src="AssetXfer.js"></script>
+<script src="DataRTC.js"></script>
+</head>
+<body>
+<!-- ----------------------------------------------------------------------- -->
+<div>
+<h1>Server connection: <span id="dbStatus">unconnected</span></h1>
+<p><span><button id="dbOpen">&#xa0;</button></span>Connect to server</p>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Client id</h1><p>
+This device:
+<input type="text" id="clientId" size="10"></p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>User agent: 
+<input type="text" id="userAgent" size="12"></h1></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Battery</h1><p>
+Charging:
+<input type="text" id="batteryCharging" size="1"><br>
+Level:
+<input type="text" id="batteryLevel" size="3">%<br>
+Charging time:
+<input type="text" id="batteryChargingTime" size="5">h<br>
+Discharging time:
+<input type="text" id="batteryDischargingTime" size="5">h<br>
+<span><button id="batteryButton">&#xa0;</button></span>
+Fill real battery status</p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Existing WebRTC connections</h1><p>
+<table id="connTable"></table></p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Network type:
+<input type="text" id="netType" size="12"></h1><p>
+<select id="netType2">
+  <option value="cellular">cellular</option>
+  <option value="bluetooth">bluetooth</option>
+  <option value="ethernet">ethernet</option>
+  <option value="wifi">wifi</option>
+  <option value="wimax">wimax</option>
+  <option value="other">other</option>
+  <option value="none">none</option>
+  <option value="unknown">unknown</option>
+</select><br>
+<span><button id="netButton">&#xa0;</button></span>
+Fill real connection type</p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Upload speed:
+<input type="text" id="netSpeed" size="8"><span>kbit/s</h1><p>
+<span><button id="netSpeedButton">&#xa0;</button></span>
+Measure</p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Logical network location</h1><p>
+<table id="locTable"></table>
+<span><button id="locButton">&#xa0;</button></span>
+Measure</p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>Client processing speed</h1><p>
+Speed:
+<input type="number" id="speed" size=5></p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div style="display:none"><h1>3D rendering speed</h1><p>
+Speed:
+<input type="number" id="speed3D" size=5></p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div><h1>3D assets</h1><p>
+Load mode:<br>
+<input id="modeServer" type="radio" name="loadMode" value="1" checked>Server<br>
+<input id="modePeer" type="radio" name="loadMode" value="2">Peers<br>
+<input id="modeBoth" type="radio" name="loadMode" value="3">Server & Peers<br>
+Asset server speed: <select id="serverSpeed">
+  <option value="_2Mb">2 Mb/s</option>
+  <option value="_10Mb">10 Mb/s</option>
+  <option value="" selected>natural</option>
+</select>
+<table id="assetTable">
+</table>
+</p>
+<p><span><a id="asset_save">&#xa0;</a></span>Save asset</p></div>
+<!-- ----------------------------------------------------------------------- -->
+<div style="display:none"><h1>Debugging</h1>
+<p id="trace">new</p>
+<div id="debug"><p>---</p></div>
+<span><button id="debugButton">&#xa0;</button></span> Dump</div>
+<!-- ----------------------------------------------------------------------- -->
+<div>
+<h1>Server connection: <span id="dbStatus2">unconnected</span></h1>
+<p><span><button id="dbOpen2">&#xa0;</button></span>Connect to server</p>
+<p><span><button id="dbSend">&#xa0;</button></span>Send description</p>
+<p><span><button id="dbClose">&#xa0;</button></span>Disconnect</p>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+<script>
+(function () {
+try {
+document.getElementById("trace").innerHTML = "started";
+//--------------------------------------------------------
+function getName(ctx, name) {
+  var prefix = ["", "moz", "webkit", "ms", "Moz", "Webkit", "Ms"];
+  var obj = null;
+  var len = prefix.length;
+  var ans;
+  for (var i = 0; !obj && i < len; i++) {
+    var p = prefix[i];
+    ans = name;
+    if (p.length > 0) {
+      ans = prefix[i] + name.charAt(0).toUpperCase()
+          + name.substring(1);
+    } else {
+      ans = name;
+    }
+    if (ans in ctx) return ans;
+  }
+  return null;
+}
+
+function getComponent(ctx, name) {
+  var real_name = getName(ctx, name);
+  return (real_name ? ctx[real_name] : null);
+}
+
+function timeImage(time) {
+  var ans = "";
+  if (time < Number.POSITIVE_INFINITY) {
+    var t = time / 3600;
+    if (t < 0.2) {
+      ans = t.toFixed(3);
+    } else if (t < 2) {
+      ans = t.toFixed(2);
+    } else if (t < 20) {
+      ans = t.toFixed(1);
+    } else {
+      ans = t.toFixed(0);
+    }
+  }
+  return ans;
+}
+
+//------------------------------------------------------------------------------
+var dbSocket = null;
+var dbStatusElem = document.getElementById("dbStatus");
+var dbStatusElem2 = document.getElementById("dbStatus2");
+var dbHasName = false;
+var dbOutList = [];
+var dbFragment = "";
+
+function dbStatusSet(newStatus) {
+  dbStatusElem.innerHTML = newStatus;
+  dbStatusElem2.innerHTML = newStatus;
+}
+
+function dbOnOpen(event) {
+  try {
+    netSpeedStart = null;
+    netSpeedSize = null;
+    dbStatusSet("connected");
+    var req = {action:"name"};
+    dbSocket.send(JSON.stringify(req));
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+function dbSend(msg) {
+  try {
+    if (msg) {
+      dbOutList.push(msg);
+    }
+    if (dbSocket && dbSocket.bufferedAmount == 0) {
+      if (!dbFragment && dbOutList.length > 0) {
+        dbFragment = dbOutList.shift();
+      }
+      if (dbFragment) {
+        if (dbFragment.length > 1000) {
+          var fragment = '-' + dbFragment.substring(0, 999);
+          dbFragment = dbFragment.substring(999);
+          dbSocket.send(fragment);
+        } else {
+          dbSocket.send('+' + dbFragment);
+          dbFragment = null;
+        }
+      }
+    } else {
+      setTimeout(dbSend, 100);
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+function dbOnMessage(event) {
+  var msgTime = new Date().getTime();
+  try {
+    var data = event.data;
+    if (data.charAt(0) == '!') {
+      netSpeedStart = msgTime;
+      return;
+    } else if (data.charAt(0) == '?') {
+      if (netSpeedStart != null) {
+        var netSpeedSize = data.length;
+        var speed = 8000 * netSpeedSize / (msgTime - netSpeedStart);
+        netSpeedElem.value = Math.round(speed);
+        netSpeedStart = null;
+      }
+      return;
+    } else if (data.charAt(0) == '&') {
+      dbSend(null);
+      return;
+    }
+    var resp = JSON.parse(data);
+    if (resp.error) {
+      alert("Server says: error:\n"+resp.error);
+    } else if (resp.action) {
+      if (dbStatusElem.innerHTML == "closing") {
+        dbSocket.close();
+      } else if (resp.action == 'name') {
+        if (resp.ans) {
+          if (nameElem.value == '') {
+            nameElem.value = resp.ans;
+            dbSend('{"action":"name","client":"'+resp.ans+'"}');
+          } else {
+            dbSend('{"action":"name","client":"'+nameElem.value+'"}');
+          }
+        }
+        dbHasName = true;
+      } else if (resp.action  == 'set') {
+        if (!dbHasName) {
+          if (nameElem.value == "") {
+            dbSend('{"action":"name"}');
+          } else {
+            dbSend('{"action":"name","client":"'+nameElem.value+'"}');
+            dbHasName = true;
+          }
+        }
+        dbStatusSet("data sent");
+      } else if (resp.action == 'said') {
+        dataRTC.useSignal(resp.client, resp.signal);
+      } else if (resp.action == 'ask_asset') {
+        loadAsset(resp.asset, resp.clients);
+      }
+    }
+  } catch (e) {
+    alert(e.message+"\n"+event.data);
+  }
+}
+
+function dbOnClose() {
+  dbSocket = null;
+  if (dbStatusElem.innerHTML == "closing") {
+    dbStatusSet("closed");
+  } else {
+    dbStatusSet("failed");
+  }
+}
+
+function dbOpen() {
+  try {
+    if (!dbSocket) {
+      dbStatusSet("connecting");
+      dbSocket = new WebSocket(dbServerURI);
+      dbSocket.onopen = dbOnOpen;
+      dbSocket.onmessage = dbOnMessage;
+      dbSocket.onclose = dbOnClose;
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+function dbSendCommand(cmd) {
+  dbSend(JSON.stringify(cmd));
+}
+
+function dbSendData() {
+  try {
+    if (dbSocket) {
+      var name = document.getElementById("clientId").value;
+      var data = {};
+      var val;
+      val = userAgentElem.value.trim();
+      data.browser_type = val;
+      val = batteryChargingElem.value.trim();
+      data.battery_charging = ( val == 'Y' ? true : val == 'N' ? false : null );
+      val = batteryLevelElem.value.trim();
+      data.battery_level = ( val == "" || isNaN(val) ? null : +val );
+      val = batteryChargingTimeElem.value.trim();
+      data.battery_charging_time = ( val == "" || isNaN(val) ? null : +val );
+      val = batteryDischargingTimeElem.value.trim();
+      data.battery_discharging_time = ( val == "" || isNaN(val) ? null : +val );
+      var rowElems = connTableElem.rows;
+      var len = rowElems.length;
+      data.connections = [];
+      for (var i = 0; i < len; i++) {
+        var cellElems = rowElems[i].cells;
+        var state = cellElems[1].childNodes[0].value.trim();
+        if (state == "open") {
+          data.connections.push(cellElems[0].innerHTML.trim());
+        }
+      }
+      data.network_type = netTypeElem.value.trim();
+      val = netSpeedElem.value.trim();
+      data['upload_speed'] = ( val == "" || isNaN(val) ? null : +val );
+      var rowElems = locTableElem.children;
+      var len = rowElems.length;
+      if (len > 5) len = 5;
+      for (var i = 0; i < len; i++) {
+        val = rowElems[i].children[1].children[0].value.trim();
+        data['logical_network_location_'+(i+1)]
+            = ( val == "" || isNaN(val) ? null : +val );
+      }
+      val = speedElem.value.trim();
+      data.client_processing_speed = ( val == "" || isNaN(val) ? null : +val );
+/*
+      val = speed3DElem.value.trim();
+      data['3D_rendering_speed'] = ( val == "" || isNaN(val) ? null : +val );
+*/
+      var req = {action:"set", client:name, data:data};
+      dbSend(JSON.stringify(req));
+    } else {
+      dbStatusSet("failed");
+    }
+  } catch (e) {
+    dbStatusSet("failed");
+    alert("failed:\n"+e.message);
+  }
+}
+
+function dbSendSignal(dst, signal) {
+  if (!dbHasName && nameElem.value != "") {
+    dbSend('{"action":"name","client":"'+nameElem.value+'"}');
+    dbHasName = true;
+  }
+if (typeof(signal) != 'string' || signal.charAt(0) != '{') {
+alert("### trying to send a bad signal");
+}
+  req = {action: 'say', client: dst, signal: signal};
+  msg = JSON.stringify(req);
+  dbSend(JSON.stringify(req));
+}
+
+function dbSendTest(size) {
+  try {
+    if (dbSocket && netSpeedStart == null) {
+      netSpeedElem.value = "...";
+      var buf = Array(size);
+      buf[0] = '?';
+      for (var i = 1; i < size; i++) {
+        buf[i] = String.fromCharCode(0x61 + 26*Math.random());
+      }
+      dbSend(buf.join(""));
+    }
+  } catch (e) {
+    netSpeedStart = null;
+    netSpeedSize = 0;
+    dbStatusSet("failed");
+    alert("failed:\n"+e.message);
+  }
+}
+
+function dbClose() {
+  try {
+    if (dbSocket) {
+      dbStatusSet("closing");
+      var name = document.getElementById("clientId").value;
+      dbSend('{"action":"delete","client":"'+name+'"}');
+    } else {
+      dbStatusSet("closed");
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+document.getElementById("dbOpen").onclick = dbOpen;
+document.getElementById("dbOpen2").onclick = dbOpen;
+document.getElementById("dbSend").onclick = dbSendData;
+document.getElementById("dbClose").onclick = dbClose;
+//------------------------------------------------------------------------------
+var nameElem = document.getElementById("clientId");
+nameElem.value = "";
+nameElem.onchange = function() {
+  if (dbSocket) {
+    dbSend('{"action":"name","client":"'+nameELem.value+'"}');
+  }
+}
+//------------------------------------------------------------------------------
+var userAgentElem = document.getElementById("userAgent");
+var isChrome = false;
+if (navigator.userAgent.indexOf("Firefox") >= 0) {
+  userAgentElem.value = "Firefox";
+} else if (navigator.userAgent.indexOf("Chrome") >= 0) {
+  userAgentElem.value = "Chrome";
+  var isChrome = true;
+} else if (navigator.userAgent.indexOf("Safari") >= 0) {
+  userAgentElem.value = "Safari";
+}
+//------------------------------------------------------------------------------
+var battery = getComponent(navigator, "battery");
+var batteryChargingElem = document.getElementById("batteryCharging");
+var batteryLevelElem = document.getElementById("batteryLevel");
+var batteryChargingTimeElem = document.getElementById("batteryChargingTime");
+var batteryDischargingTimeElem 
+        = document.getElementById("batteryDischargingTime");
+
+function getBatteryStatus() {
+  if (battery) {
+    batteryChargingElem.value = (battery.charging ? "Y" : "N");
+    batteryLevelElem.value = (100*battery.level).toFixed(0);
+    batteryChargingTimeElem.value = timeImage(battery.chargingTime);
+    batteryDischargingTimeElem.value = timeImage(battery.dischargingTime);
+  } else {
+    batteryChargingElem.value = "";
+    batteryLevelElem.value = "";
+    batteryChargingTimeElem.value = "";
+    batteryDischargingTimeElem.value = "";
+  }
+}
+
+document.getElementById("batteryButton").onclick = getBatteryStatus;
+
+getBatteryStatus();
+//------------------------------------------------------------------------------
+var clients = [
+  "client_1",
+  "client_2",
+  "client_3",
+  "client_4",
+  "client_5",
+  "client_6",
+  "client_7",
+  "client_8",
+  "client_9",
+  "client_10",
+  "client_11",
+  "client_12" ];
+
+var connTableElem = document.getElementById("connTable");
+var clientStateElems = {};
+var connections = {};
+
+function openConnection(name) {
+  if (dataRTC.getChannelState() == "unconnected" && dbSocket != null) {
+    clientStateElems[name].value = "connecting";
+    dataRTC.createConnection(name);
+  } else {
+    dataRTC.close(name);
+  }
+}
+
+function connectPeer(ev) {
+  var id = ev.currentTarget.id;
+  var name = id.substring(2);
+  var stateElem = clientStateElems[name];
+  var state = stateElem.value;
+  if (state == "unconnected" || state == "closing" || state == "closed") {
+    openConnection(name);
+  } else {
+    stateElem.value = "closing";
+    dataRTC.close(name);
+    stateElem.value = "closed";
+  }
+}
+
+dataRTC.onConnection = function (name, newConnection) {
+  connections[name] = newConnection;
+}
+
+dataRTC.onClose = function (name) {
+  connections[name] = null;
+  clientStateElems[name].value = "closed";
+}
+
+dataRTC.onError = function (name, error) {
+  clientStateELems[name].value = "failed";
+}
+
+function showConnState(name, state) {
+  var rowElems = connTableElem.children;
+  var len = rowElems.length;
+  var rowElem = null;
+  var cellElems = null;
+  var nameElem = null;
+  var stateElem = null;
+  var buttonElem = null;
+  for (var i = 0; i < len && !stateElem; i++) {
+    rowElem = rowElems[i];
+    var cellElems = rowElem.children;
+    nameElem = cellElems[0];
+    if (nameElem.innerHTML == name) {
+      stateElem = cellElems[1].children[0];
+    }
+  }
+  if (!stateElem) {
+    rowElem = document.createElement("tr");
+    nameElem = document.createElement("td");
+    nameElem.innerHTML = name;
+    rowElem.appendChild(nameElem);
+    stateElem = document.createElement("input");
+    stateElem.type = "text";
+    stateElem.size = "12";
+    stateElem.id = "S:"+name;
+    var stateCellElem = document.createElement("td");
+    stateCellElem.appendChild(stateElem);
+    rowElem.appendChild(stateCellElem);
+    buttonElem = document.createElement("button");
+    buttonElem.onclick = connectPeer;
+    buttonElem.id = "C:"+name;
+    var buttonCellElem = document.createElement("td");
+    buttonCellElem.appendChild(buttonElem);
+    rowElem.appendChild(buttonCellElem);
+    connTableElem.appendChild(rowElem);
+    clientStateElems[name] = stateElem;
+    connections[name] = null;
+  }
+  stateElem.value = state;
+}
+
+function showConnStates() {
+  for (var k in clients) {
+    showConnState(clients[k], dataRTC.getChannelState(clients[k]));
+  }
+}
+
+showConnStates();
+
+dataRTC.onChannelStateChange = function (name, state) {
+  showConnState(name, state);
+}
+
+dataRTC.onSignal = function (name, signal) {
+  dbSendSignal(name, signal);
+}
+
+//------------------------------------------------------------------------------
+var netInfo = getComponent(navigator, "connection");
+var netTypeElem = document.getElementById("netType");
+var netType2Elem = document.getElementById("netType2");
+
+function getNetInfo() {
+  if (netInfo) {
+    netTypeElem.value = netInfo.type;
+  } else {
+    netTypeElem.value = "";
+  }
+}
+
+getNetInfo();
+
+document.getElementById("netButton").onclick = getNetInfo;
+
+netType2Elem.onchange = function() {
+  netTypeElem.value = netType2Elem.value;
+}
+//------------------------------------------------------------------------------
+var netSpeedElem = document.getElementById("netSpeed");
+var netSpeedStart = null;
+var netSpeedSize = null;
+document.getElementById("netSpeedButton").onclick = function () {
+ dbSendTest(1);
+};
+//------------------------------------------------------------------------------
+var locMarks = [
+  "oulu.fi",
+  "myip.is",
+  "www.nasa.gov",
+  "dev.cie.fi" ];
+
+var locTableElem = document.getElementById("locTable");
+
+function showLocDist(mark, dist) {
+  var rowElems = locTableElem.children;
+  var len = rowElems.length;
+  var rowElem = null;
+  var cellElems = null;
+  var markElem = null;
+  var distElem = null;
+  for (var i = 0; i < len && !distElem; i++) {
+    rowElem = rowElems[i];
+    var cellElems = rowElem.children;
+    markElem = cellElems[0];
+    if (markElem.innerHTML == mark) {
+      distElem = cellElems[1].children[0];
+    }
+  }
+  if (!distElem) {
+    rowElem = document.createElement("tr");
+    markElem = document.createElement("td");
+    markElem.innerHTML = mark;
+    rowElem.appendChild(markElem);
+    distElem = document.createElement("input");
+    distElem.type = "text";
+    distElem.value = dist;
+    distElem.size = 6;
+    var distCellElem = document.createElement("td");
+    distCellElem.appendChild(distElem);
+    rowElem.appendChild(distCellElem);
+    locTableElem.appendChild(rowElem);
+  }
+  distElem.value = dist;
+}
+
+for (var k in locMarks) {
+  showLocDist(locMarks[k], "");
+}
+
+var rMin = 100000000; // some power of 10
+var rNum = 9 * rMin;
+
+var locNextTest = 0;
+var locTestCnt = 0;
+
+function locMeasure() {
+  locTestCnt--;
+  var i = locNextTest;
+  locNextTest = (locNextTest + 1) % locMarks.length;
+  if (i in locMarks) {
+    showLocDist(locMarks[i], "");
+    var start;
+    img = new Image();
+    img.onload = function () {
+      var end = new Date().getTime();
+      showLocDist(locMarks[i], end - start);
+      img.onload = null;
+      img.onerror = null;
+      img = null;
+      if (locTestCnt > 0) {
+        locMeasure();
+      }
+    };
+    img.onerror = img.onload;
+    var loc = "http://"+locMarks[i]+"/X"
+      +Math.floor(rMin + rNum*Math.random())+".png";
+    start = new Date().getTime();
+    img.src = loc;
+  }
+}
+
+document.getElementById("locButton").onclick = function () {
+  if (locTestCnt == 0) {
+    locNextTest = 0;
+  }
+  locTestCnt = 2*locMarks.length;
+  setTimeout(locMeasure(), 100);
+};
+//------------------------------------------------------------------------------
+var speedElem = document.getElementById("speed");
+var speed3DElem = document.getElementById("speed3D");
+//------------------------------------------------------------------------------
+var assets = [
+  "asset_1",
+  "asset_2",
+  "asset_3",
+  "asset_4",
+  "asset_5" ];
+
+var assetXfers = { asset_1:null, asset_2:null, asset_3:null,
+                   asset_4:null, asset_5:null };
+
+var assetModeElem1 = document.getElementById("modeServer");
+var assetModeElem2 = document.getElementById("modePeer");
+var assetModeElem3 = document.getElementById("modeBoth");
+var serverSpeedElem = document.getElementById("serverSpeed");
+var assetTableElem = document.getElementById("assetTable");
+var assetStateElems = [];
+
+var assetLoadMode = 1;
+var assetLoadStates = {};
+var assetLoadStartTime = null;
+var assetLoadCounts = {};
+var peerInfos = {};
+
+function requestAsset(index) {
+  dbSendCommand({action:'ask_asset', client:nameElem.value,
+      asset:assets[index]});
+}
+
+dataRTC.onData = function (name, message) {
+  var messageType = typeof(message);
+  if (messageType == 'string') { // request
+    var req = JSON.parse(message);
+    send_asset_slice(name, req.asset, req.fst, req.len);
+  } else { // data
+    var assetLoadState = assetLoadStates[name];
+    var asset = assetLoadState.asset;
+    var size;
+    if (message instanceof Blob) {
+      size = message.size;
+    } else {
+      size = message.byteLength;
+    }
+    assetLoadState.fragments.push(message);
+    assetLoadState.nxt = assetLoadState.nxt + size;
+    if (assetLoadState.nxt < assetLoadState.end) { // need more
+      orderAssetFragment(name);
+    } else { // got all data
+      var fragments = assetLoadState.fragments;
+      var assetBlob;
+      if (fragments.length == 1 && fragments[0] instanceof Blob) {
+        assetBlob = fragments[0];
+      } else {
+        assetBlob = new Blob(assetLoadState.fragments);
+      }
+      assetXfers[asset].handle_chunk(name, assetBlob,
+            assetLoadState.fst, (assetLoadState.end - assetLoadState.fst));
+    }
+  }
+};
+
+function loadAsset(asset, peers) {
+  var assetXfer = new AssetXfer();
+  if (nameElem.value != "client_1") {
+    assetXfer.noSuffix = true;
+  }
+  assetXfers[asset] = assetXfer;
+  var serverSpeed = serverSpeedElem.value;
+  assetXfer.setAsset(asset, serverSpeed);
+  var ranked_peer_list = [];
+  assetLoadCounts = {};
+  for (var i = 0; i < peers.length; i++) {
+    var name = peers[i];
+    var downloading = false;
+    var state = clientStateElems[name].value;
+    var connected = (state == 'open');
+    ranked_peer_list[i] = { name:name,
+          downloading:downloading, connected:connected };
+    peerInfos[name] = ranked_peer_list[i];
+    assetLoadCounts[name] = 0;
+    if (!connected) {
+      openConnection(name);
+    }
+  }
+  assetXfer.setPeers(ranked_peer_list);
+  assetXfer.onDone = handleAsset;
+  assetXfer.onChunkNeeded = orderAssetSlice;
+  assetLoadStartTime = Date.now();
+  assetXfer.start(assetLoadMode);
+}
+
+function orderAssetSlice(peer, asset, fst, len) {
+  assetLoadStates[peer] = { asset:asset, fst:fst, nxt:fst, end:(fst+len),
+                            fragments:[] };
+  if (assetLoadCounts[peer]) {
+    assetLoadCounts[peer]++;
+  } else {
+    assetLoadCounts[peer] = 1;
+  }
+  if (connections[peer]) {
+    orderAssetFragment(peer);
+  }
+}
+
+dataRTC.onOpen = function (peer) {
+  if (peerInfos[peer] && !peerInfos[peer].connected) {
+    peerInfos[peer].connected = true;
+  }
+  if (assetLoadStates[peer]) {
+    if (assetLoadStates[peer].nxt < assetLoadStates[peer].end) {
+      orderAssetFragment(peer);
+    }
+  } else {
+    for (var i = 0; i < assets.length; i++) {
+      var assetXfer = assetXfers[assets[i]];
+      if (assetXfer) {
+        assetXfer.continue();
+      }
+    }
+  }
+}
+
+function orderAssetFragment(peer) {
+  var assetLoadState = assetLoadStates[peer];
+  var asset = assetLoadState.asset;
+  var nxt = assetLoadState.nxt;
+  var len = assetLoadState.end - nxt;
+  if (isChrome && len > 16384) len = 16384;
+  var request = { asset: asset, fst: nxt, len: len };
+  var reqmsg = JSON.stringify(request);
+  connections[peer].sendData(reqmsg);
+}
+
+function handleAsset(asset, assetBlob) {
+  var loadDuration = Date.now() - assetLoadStartTime;
+  var assetXfer = assetXfers[asset];
+  var index = assets.indexOf(asset);
+  var stateElem = assetStateElems[index];
+  var saveElem = document.getElementById("asset_save");
+  saveElem.href = URL.createObjectURL(assetBlob);
+  saveElem.download = asset;
+  
+  dbSendCommand( {action: "log", message: "asset loaded",
+    client: nameElem.value,
+    data: { asset:asset,
+            serverSpeed: assetXfer.serverSuffix || "natural",
+            peer_chunks: assetLoadCounts,
+            server_chunks: assetXfer.num_chunks 
+                               - assetXfer.num_chunks_from_peers,
+            load_duration: loadDuration } } );
+
+  stateElem.value = assetXfer.num_chunks_from_peers+" / "+assetXfer.num_chunks;
+  setTimeout(function () {dbSend('{"action":"nop"}');}, 1000);
+}
+
+for (var i = 0; i < assets.length; i++) {
+  var new_row = assetTable.insertRow(i);
+  var name_cell = new_row.insertCell(0);
+  name_cell.innerHTML = assets[i];
+  var state_cell = new_row.insertCell(1);
+  var stateElem = document.createElement("input");
+  assetStateElems[i] = stateElem;
+  stateElem.type = "text";
+  stateElem.value = "-";
+  stateElem.size = 8;
+  state_cell.appendChild(stateElem);
+  var button_cell = new_row.insertCell(2);
+  var buttonElem = document.createElement("button");
+  buttonElem.onclick = (function (index) {
+    return (function () {
+      assetStateElems[index].value = "loading";
+      assetLoadMode = ( assetModeElem2.checked ? 2 
+                      : assetModeElem3.checked ? 3 : 1 );
+      if (assetLoadMode == 1) {
+        loadAsset(assets[index], []);
+      } else {
+        requestAsset(index);
+      }
+    });
+  } (i));
+  button_cell.appendChild(buttonElem);
+}
+
+function send_asset_slice(dstName, asset, fst, len) {
+  var assetXfer = assetXfers[asset];
+  if (assetXfer) {
+    if (isChrome) {
+      var slice_len = 16384;
+      if (len < slice_len) {
+        slice_len = len;
+      }
+      var sliceBlob = assetXfer.assetBlob.slice(fst, fst+slice_len);
+      var reader = new FileReader();
+      reader.onloadend = function (ev) {
+        if (ev.loaded) {
+//          dataRTC.sendData(dstName, JSON.stringify({"data.":this.result}));
+          dataRTC.sendData(dstName, this.result);
+        }
+      };
+//    reader.readAsText(sliceBlob);
+      reader.readAsArrayBuffer(sliceBlob);
+    } else {
+      var sliceBlob = assetXfer.assetBlob.slice(fst, fst+len);
+      dataRTC.sendData(dstName, sliceBlob);
+    }
+  }
+}
+
+/*
+function send_asset_slice(dstName, asset, fst, len) {
+  var assetXfer = assetXfers[asset];
+  if (assetXfer) {
+    var sliceBlob = assetXfer.assetBlob.slice(fst, fst+len);
+    dataRTC.sendData(dstName, sliceBlob);
+  }
+}
+*/
+
+//------------------------------------------------------------------------------
+function elemDump(oldindent, elem) {
+  var indent = oldindent + "  ";
+  var ans = oldindent + elem.tagName + "\n";
+  if ('clientWidth' in elem) {
+    ans += indent + "-- clientWidth = " + elem.clientWidth + "\n";
+  }
+  if ('clientHeight' in elem) {
+    ans += indent + "-- clientHeight = " + elem.clientHeight + "\n";
+  }
+  var attrs = elem.attributes;
+  var n = attrs.length;
+  for (var i = 0; i < n; i++) {
+    var attr = attrs.item(i);
+    ans += indent + attr.name + " = " + attr.value;
+    if (attr.isId) ans += " -- is Id";
+    if (!attr.specified) ans += " -- not specified";
+    ans += "\n";
+  }
+  var nodes = elem.childNodes;
+  n = nodes.length;
+  for (var i = 0; i < n; i++) {
+    var node = nodes[i];
+    if (node.tagName) {
+      ans += elemDump(indent, node);
+    } else {
+      ans += indent + node.nodeName + "\n";
+    }
+  }
+  return ans;
+}
+var debugRoot = document.getElementsByTagName("body")[0];
+var debugElem = document.getElementById("debug");
+var debugButton = document.getElementById("debugButton");
+if (debugButton) {
+  debugButton.onclick = function () {
+    var ansElem = document.createElement("div");
+    var dump = elemDump("", debugRoot);
+    ansElem.innerHTML = "<pre>"+dump+"</pre>";
+    debugElem.replaceChild(ansElem, debugElem.children[0]);
+  };
+}
+//------------------------------------------------------------------------------
+document.getElementById("trace").innerHTML = "ready";
+} catch (err) {
+document.getElementById("trace").innerHTML = "failed: "+err.message;
+}
+}) ();
+</script>
+</body>
+</html>
